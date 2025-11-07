@@ -39,6 +39,11 @@ namespace SimuladorAcademia.Infraestrutura.Repositorios
             return ObterQuery().AnyAsync(r => r.AlunoId == alunoId && r.AulaId == aulaId, ct);
         }
 
+        public async Task<int> ContarReservasAtivasDoAlunoAsync(Guid alunoId, CancellationToken ct = default)
+        {
+            return await _contexto.Reservas
+                .CountAsync(r => r.AlunoId == alunoId, ct);
+        }
 
         public async Task InserirAsync(Reserva reserva, CancellationToken cancellationToken = default)
         {

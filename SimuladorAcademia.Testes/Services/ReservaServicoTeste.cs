@@ -11,12 +11,14 @@ namespace SimuladorAcademia.Tests.Services
     public class ReservaServicoTests
     {
         private readonly Mock<IReservaRepositorio> _mockRepositorio;
+        private readonly Mock<IAlunoRepositorio> _mockAlunoRepositorio;
         private readonly ReservaServico _servico;
 
         public ReservaServicoTests()
         {
             _mockRepositorio = new Mock<IReservaRepositorio>();
-            _servico = new ReservaServico(_mockRepositorio.Object);
+            _mockAlunoRepositorio = new Mock<IAlunoRepositorio>();
+            _servico = new ReservaServico(_mockRepositorio.Object, _mockAlunoRepositorio.Object);
         }
 
         [Fact]
@@ -26,14 +28,25 @@ namespace SimuladorAcademia.Tests.Services
             var aulaId = Guid.NewGuid();
             var dto = new InserirReservaDTO(alunoId, aulaId);
 
+            _mockAlunoRepositorio
+                .Setup(a => a.ObterAlunoComPlanoAsync(alunoId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Aluno
+                {
+                    Id = alunoId,
+                    Nome = "AlunoTeste",
+                    TipoDePlano = new TipoDePlano
+                    {
+                        Id = Guid.NewGuid(),
+                        Nome = "PlanoTeste",
+                        LimiteAula = 5
+                    }
+                });
             _mockRepositorio
                 .Setup(r => r.ExisteReservaAsync(alunoId, aulaId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
-
             _mockRepositorio
                 .Setup(r => r.InserirAsync(It.IsAny<Reserva>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
-
             _mockRepositorio
                 .Setup(r => r.ObterPorIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Guid id, CancellationToken ct) => new Reserva
@@ -57,7 +70,6 @@ namespace SimuladorAcademia.Tests.Services
                     StatusReserva = StatusReserva.Agendado
                 });
 
-
             var resultado = await _servico.CriarAsync(dto);
 
             resultado.Sucesso.Should().BeTrue();
@@ -66,6 +78,7 @@ namespace SimuladorAcademia.Tests.Services
             resultado.Reserva!.NomeAluno.Should().Be("AlunoTeste");
             resultado.Reserva.NomeAula.Should().Be("AulaTeste");
         }
+
 
         [Fact]
         public async Task CriarReserva_DeveFalharSeReservaDuplicada()
@@ -82,6 +95,38 @@ namespace SimuladorAcademia.Tests.Services
 
             resultado.Sucesso.Should().BeFalse();
             resultado.Mensagem.Should().Be("O aluno já possui uma reserva para esta aula.");
+            resultado.Reserva.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task CriarReserva_DeveFalharSeAlunoAtingiuLimiteDoPlano()
+        {
+            var alunoId = Guid.NewGuid();
+            var aulaId = Guid.NewGuid();
+            var dto = new InserirReservaDTO(alunoId, aulaId);
+            var aluno = new Aluno
+            {
+                Id = alunoId,
+                Nome = "AlunoTeste",
+                TipoDePlano = new TipoDePlano
+                {
+                    Id = Guid.NewGuid(),
+                    Nome = "PlanoTeste",
+                    LimiteAula = 2
+                }
+            };
+
+            _mockAlunoRepositorio
+                .Setup(a => a.ObterAlunoComPlanoAsync(alunoId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(aluno);
+            _mockRepositorio
+                .Setup(r => r.ContarReservasAtivasDoAlunoAsync(alunoId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(2);
+
+            var resultado = await _servico.CriarAsync(dto);
+
+            resultado.Sucesso.Should().BeFalse();
+            resultado.Mensagem.Should().Be("O aluno atingiu o limite de aulas do plano.");
             resultado.Reserva.Should().BeNull();
         }
     }

@@ -27,6 +27,12 @@ namespace SimuladorAcademia.Infraestrutura.Repositorios
                 .Include(a => a.TipoDePlano)
                 .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
         }
+        public async Task<Aluno?> ObterAlunoComPlanoAsync(Guid alunoId, CancellationToken ct = default)
+        {
+            return await _contexto.Alunos
+                .Include(a => a.TipoDePlano)
+                .FirstOrDefaultAsync(a => a.Id == alunoId, ct);
+        }
 
         public async Task InserirAsync(Aluno aluno, CancellationToken cancellationToken = default)
         {

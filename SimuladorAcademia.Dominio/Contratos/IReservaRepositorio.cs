@@ -6,6 +6,7 @@ namespace SimuladorAcademia.Dominio.Contratos
     {
         IQueryable<Reserva> ObterQuery();
         Task<Reserva?> ObterPorIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<int> ContarReservasAtivasDoAlunoAsync(Guid alunoId, CancellationToken ct = default);
         Task InserirAsync(Reserva reserva, CancellationToken cancellationToken = default);
         Task AtualizarAsync(Reserva reserva, CancellationToken cancellationToken = default);
         Task<bool> RemoverAsync(Guid id, CancellationToken cancellationToken = default);

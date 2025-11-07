@@ -11,10 +11,12 @@ namespace SimuladorAcademia.Aplicacao.Servicos
     public class ReservaServico : IReservaServico
     {
         private readonly IReservaRepositorio _repositorio;
+        private readonly IAlunoRepositorio _alunoRepositorio;
 
-        public ReservaServico(IReservaRepositorio repositorio)
+        public ReservaServico(IReservaRepositorio repositorio, IAlunoRepositorio alunoRepositorio)
         {
             _repositorio = repositorio;
+            _alunoRepositorio = alunoRepositorio;
         }
 
         public async Task<RespostaPaginada<ReservaDTO>> ObterTodosAsync(RequisicaoPaginada requisicao, CancellationToken ct = default)
@@ -44,10 +46,17 @@ namespace SimuladorAcademia.Aplicacao.Servicos
         public async Task<(bool Sucesso, string Mensagem, ReservaDTO? Reserva)> CriarAsync(InserirReservaDTO dto, CancellationToken ct = default)
         {
             var existeReserva = await _repositorio.ExisteReservaAsync(dto.AlunoId, dto.AulaId, ct);
-
-
             if (existeReserva)
                 return (false, "O aluno já possui uma reserva para esta aula.", null);
+
+            var aluno = await _alunoRepositorio.ObterAlunoComPlanoAsync(dto.AlunoId, ct);
+            if (aluno == null)
+                return (false, "Aluno não encontrado.", null);
+
+            var totalReservasAtivas = await _repositorio.ContarReservasAtivasDoAlunoAsync(aluno.Id, ct);
+            if (totalReservasAtivas >= aluno.TipoDePlano.LimiteAula)
+                return (false, "O aluno atingiu o limite de aulas do plano.", null);
+
 
             var reserva = new Reserva()
             {
