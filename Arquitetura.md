@@ -33,3 +33,10 @@ Como nunca tive contato com testes unitários no C#/Visual Studio, pesquisei qua
 Detalhe que precisei criar uma função para checar se já exisita uma Reserva de Aula, pois o método não permitia chamadas assíncronas em uma lista de memória (tentei usar o métoodo ObterQuery)
 
 - [Testes Unitários: do Mock ao Arrange Act & Assert - Medium](https://medium.com/%40marcio.pcmonzon/testes-unit%C3%A1rios-do-mock-ao-arrange-act-assert-2c5f29bd304c)
+
+
+
+## 5. Funcionalidades Removidas
+
+Este projeto é uma V2 com o intuito de utilizar apenas pesquisas no Google para criação e implementação. A criação manual do projeto foi bastante edificante, e consegui dar mais atenção aos processos comuns de criação de um back-end. 
+Porém acabou consumindo bastante do meu tempo, e optei por não implementar algumas funcionalidades que havia feito antes, como o histórico de mudança de status da Reserva com motivo de cancelamento.
